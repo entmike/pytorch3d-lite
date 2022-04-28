@@ -38,7 +38,7 @@ elif sys.version_info >= (3, 7, 0):
 
 
 else:
-    raise ImportError("This module requires Python 3.7+")
+    # raise ImportError("This module requires Python 3.7+")
 
 ################################################################
 ##   ██████╗██╗      █████╗ ███████╗███████╗███████╗███████╗  ##
@@ -49,7 +49,7 @@ else:
 ##   ╚═════╝╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚══════╝  ##
 ################################################################
 
-class Transform3d:
+  class Transform3d:
     """
     A Transform3d object encapsulates a batch of N 3D transformations, and knows
     how to transform points and normal vectors. Suppose that t is a Transform3d;
