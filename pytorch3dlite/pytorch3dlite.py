@@ -1441,7 +1441,7 @@ class FoVPerspectiveCameras(CamerasBase):
 ##  ╚═════╝ ╚══════╝╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝  ##
 #######################################################################################
 
-def make_device(device: Device) -> torch.device:
+def make_device(device: Device) -> torch.device: 
     """
     Makes an actual torch.device object from the device specified as
     either a string or torch.device object. If the device is `cuda` without
