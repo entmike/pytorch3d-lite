@@ -35,10 +35,9 @@ elif sys.version_info >= (3, 7, 0):
 
     def get_args(cls):  # pragma: no cover
         return getattr(cls, "__args__", None)
-
-
 else:
     # raise ImportError("This module requires Python 3.7+")
+    print()
 
 ################################################################
 ##   ██████╗██╗      █████╗ ███████╗███████╗███████╗███████╗  ##
@@ -49,7 +48,7 @@ else:
 ##   ╚═════╝╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚══════╝  ##
 ################################################################
 
-  class Transform3d:
+class Transform3d:
     """
     A Transform3d object encapsulates a batch of N 3D transformations, and knows
     how to transform points and normal vectors. Suppose that t is a Transform3d;
@@ -288,12 +287,12 @@ else:
         Args:
             invert_composed:
                 - True: First compose the list of stored transformations
-                  and then apply inverse to the result. This is
-                  potentially slower for classes of transformations
-                  with inverses that can be computed efficiently
-                  (e.g. rotations and translations).
+                    and then apply inverse to the result. This is
+                    potentially slower for classes of transformations
+                    with inverses that can be computed efficiently
+                    (e.g. rotations and translations).
                 - False: Invert the individual stored transformations
-                  independently without composing them.
+                    independently without composing them.
 
         Returns:
             A new Transform3d object containing the inverse of the original
@@ -472,13 +471,13 @@ else:
         then self is returned.
 
         Args:
-          device: Device (as str or torch.device) for the new tensor.
-          copy: Boolean indicator whether or not to clone self. Default False.
-          dtype: If not None, casts the internal tensor variables
-              to a given torch.dtype.
+            device: Device (as str or torch.device) for the new tensor.
+            copy: Boolean indicator whether or not to clone self. Default False.
+            dtype: If not None, casts the internal tensor variables
+                to a given torch.dtype.
 
         Returns:
-          Transform3d object.
+            Transform3d object.
         """
         device_ = make_device(device)
         dtype_ = self.dtype if dtype is None else dtype
@@ -782,7 +781,7 @@ class TensorProperties(nn.Module):
         .. code-block:: python
             self.gather_props(batch_idx)
             self.specular_color = (V, 3) tensor with the specular color for
-                                     each packed vertex.
+                                        each packed vertex.
         torch.gather requires the index tensor to have the same shape as the
         input tensor so this method takes care of the reshaping of the index
         tensor to use with class attributes with arbitrary dimensions.
@@ -1217,220 +1216,220 @@ class FoVPerspectiveCameras(CamerasBase):
     for rasterization.
     """
 
-    # For __getitem__
-    _FIELDS = (
-        "K",
-        "znear",
-        "zfar",
-        "aspect_ratio",
-        "fov",
-        "R",
-        "T",
-        "degrees",
+# For __getitem__
+_FIELDS = (
+    "K",
+    "znear",
+    "zfar",
+    "aspect_ratio",
+    "fov",
+    "R",
+    "T",
+    "degrees",
+)
+
+_SHARED_FIELDS = ("degrees",)
+
+def __init__(
+    self,
+    znear=1.0,
+    zfar=100.0,
+    aspect_ratio=1.0,
+    fov=60.0,
+    degrees: bool = True,
+    R: torch.Tensor = _R,
+    T: torch.Tensor = _T,
+    K: Optional[torch.Tensor] = None,
+    device: Device = "cpu",
+) -> None:
+    """
+
+    Args:
+        znear: near clipping plane of the view frustrum.
+        zfar: far clipping plane of the view frustrum.
+        aspect_ratio: aspect ratio of the image pixels.
+            1.0 indicates square pixels.
+        fov: field of view angle of the camera.
+        degrees: bool, set to True if fov is specified in degrees.
+        R: Rotation matrix of shape (N, 3, 3)
+        T: Translation matrix of shape (N, 3)
+        K: (optional) A calibration matrix of shape (N, 4, 4)
+            If provided, don't need znear, zfar, fov, aspect_ratio, degrees
+        device: Device (as str or torch.device)
+    """
+    # The initializer formats all inputs to torch tensors and broadcasts
+    # all the inputs to have the same batch dimension where necessary.
+    super().__init__(
+        device=device,
+        znear=znear,
+        zfar=zfar,
+        aspect_ratio=aspect_ratio,
+        fov=fov,
+        R=R,
+        T=T,
+        K=K,
     )
 
-    _SHARED_FIELDS = ("degrees",)
+    # No need to convert to tensor or broadcast.
+    self.degrees = degrees
 
-    def __init__(
-        self,
-        znear=1.0,
-        zfar=100.0,
-        aspect_ratio=1.0,
-        fov=60.0,
-        degrees: bool = True,
-        R: torch.Tensor = _R,
-        T: torch.Tensor = _T,
-        K: Optional[torch.Tensor] = None,
-        device: Device = "cpu",
-    ) -> None:
-        """
+def compute_projection_matrix(
+    self, znear, zfar, fov, aspect_ratio, degrees: bool
+) -> torch.Tensor:
+    """
+    Compute the calibration matrix K of shape (N, 4, 4)
 
-        Args:
-            znear: near clipping plane of the view frustrum.
-            zfar: far clipping plane of the view frustrum.
-            aspect_ratio: aspect ratio of the image pixels.
-                1.0 indicates square pixels.
-            fov: field of view angle of the camera.
-            degrees: bool, set to True if fov is specified in degrees.
-            R: Rotation matrix of shape (N, 3, 3)
-            T: Translation matrix of shape (N, 3)
-            K: (optional) A calibration matrix of shape (N, 4, 4)
-                If provided, don't need znear, zfar, fov, aspect_ratio, degrees
-            device: Device (as str or torch.device)
-        """
-        # The initializer formats all inputs to torch tensors and broadcasts
-        # all the inputs to have the same batch dimension where necessary.
-        super().__init__(
-            device=device,
-            znear=znear,
-            zfar=zfar,
-            aspect_ratio=aspect_ratio,
-            fov=fov,
-            R=R,
-            T=T,
-            K=K,
+    Args:
+        znear: near clipping plane of the view frustrum.
+        zfar: far clipping plane of the view frustrum.
+        fov: field of view angle of the camera.
+        aspect_ratio: aspect ratio of the image pixels.
+            1.0 indicates square pixels.
+        degrees: bool, set to True if fov is specified in degrees.
+
+    Returns:
+        torch.FloatTensor of the calibration matrix with shape (N, 4, 4)
+    """
+    K = torch.zeros((self._N, 4, 4), device=self.device, dtype=torch.float32)
+    ones = torch.ones((self._N), dtype=torch.float32, device=self.device)
+    if degrees:
+        fov = (np.pi / 180) * fov
+
+    if not torch.is_tensor(fov):
+        fov = torch.tensor(fov, device=self.device)
+    tanHalfFov = torch.tan((fov / 2))
+    max_y = tanHalfFov * znear
+    min_y = -max_y
+    max_x = max_y * aspect_ratio
+    min_x = -max_x
+
+    # NOTE: In OpenGL the projection matrix changes the handedness of the
+    # coordinate frame. i.e the NDC space positive z direction is the
+    # camera space negative z direction. This is because the sign of the z
+    # in the projection matrix is set to -1.0.
+    # In pytorch3d we maintain a right handed coordinate system throughout
+    # so the so the z sign is 1.0.
+    z_sign = 1.0
+
+    K[:, 0, 0] = 2.0 * znear / (max_x - min_x)
+    K[:, 1, 1] = 2.0 * znear / (max_y - min_y)
+    K[:, 0, 2] = (max_x + min_x) / (max_x - min_x)
+    K[:, 1, 2] = (max_y + min_y) / (max_y - min_y)
+    K[:, 3, 2] = z_sign * ones
+
+    # NOTE: This maps the z coordinate from [0, 1] where z = 0 if the point
+    # is at the near clipping plane and z = 1 when the point is at the far
+    # clipping plane.
+    K[:, 2, 2] = z_sign * zfar / (zfar - znear)
+    K[:, 2, 3] = -(zfar * znear) / (zfar - znear)
+
+    return K
+
+def get_projection_transform(self, **kwargs) -> Transform3d:
+    """
+    Calculate the perspective projection matrix with a symmetric
+    viewing frustrum. Use column major order.
+    The viewing frustrum will be projected into ndc, s.t.
+    (max_x, max_y) -> (+1, +1)
+    (min_x, min_y) -> (-1, -1)
+
+    Args:
+        **kwargs: parameters for the projection can be passed in as keyword
+            arguments to override the default values set in `__init__`.
+
+    Return:
+        a Transform3d object which represents a batch of projection
+        matrices of shape (N, 4, 4)
+
+    .. code-block:: python
+
+        h1 = (max_y + min_y)/(max_y - min_y)
+        w1 = (max_x + min_x)/(max_x - min_x)
+        tanhalffov = tan((fov/2))
+        s1 = 1/tanhalffov
+        s2 = 1/(tanhalffov * (aspect_ratio))
+
+        # To map z to the range [0, 1] use:
+        f1 =  far / (far - near)
+        f2 = -(far * near) / (far - near)
+
+        # Projection matrix
+        K = [
+                [s1,   0,   w1,   0],
+                [0,   s2,   h1,   0],
+                [0,    0,   f1,  f2],
+                [0,    0,    1,   0],
+        ]
+    """
+    K = kwargs.get("K", self.K)
+    if K is not None:
+        if K.shape != (self._N, 4, 4):
+            msg = "Expected K to have shape of (%r, 4, 4)"
+            raise ValueError(msg % (self._N))
+    else:
+        K = self.compute_projection_matrix(
+            kwargs.get("znear", self.znear),
+            kwargs.get("zfar", self.zfar),
+            kwargs.get("fov", self.fov),
+            kwargs.get("aspect_ratio", self.aspect_ratio),
+            kwargs.get("degrees", self.degrees),
         )
 
-        # No need to convert to tensor or broadcast.
-        self.degrees = degrees
+    # Transpose the projection matrix as PyTorch3D transforms use row vectors.
+    transform = Transform3d(
+        matrix=K.transpose(1, 2).contiguous(), device=self.device
+    )
+    return transform
 
-    def compute_projection_matrix(
-        self, znear, zfar, fov, aspect_ratio, degrees: bool
-    ) -> torch.Tensor:
-        """
-        Compute the calibration matrix K of shape (N, 4, 4)
+def unproject_points(
+    self,
+    xy_depth: torch.Tensor,
+    world_coordinates: bool = True,
+    scaled_depth_input: bool = False,
+    **kwargs,
+) -> torch.Tensor:
+    """>!
+    FoV cameras further allow for passing depth in world units
+    (`scaled_depth_input=False`) or in the [0, 1]-normalized units
+    (`scaled_depth_input=True`)
 
-        Args:
-            znear: near clipping plane of the view frustrum.
-            zfar: far clipping plane of the view frustrum.
-            fov: field of view angle of the camera.
-            aspect_ratio: aspect ratio of the image pixels.
-                1.0 indicates square pixels.
-            degrees: bool, set to True if fov is specified in degrees.
+    Args:
+        scaled_depth_input: If `True`, assumes the input depth is in
+            the [0, 1]-normalized units. If `False` the input depth is in
+            the world units.
+    """
 
-        Returns:
-            torch.FloatTensor of the calibration matrix with shape (N, 4, 4)
-        """
-        K = torch.zeros((self._N, 4, 4), device=self.device, dtype=torch.float32)
-        ones = torch.ones((self._N), dtype=torch.float32, device=self.device)
-        if degrees:
-            fov = (np.pi / 180) * fov
+    # obtain the relevant transformation to ndc
+    if world_coordinates:
+        to_ndc_transform = self.get_full_projection_transform()
+    else:
+        to_ndc_transform = self.get_projection_transform()
 
-        if not torch.is_tensor(fov):
-            fov = torch.tensor(fov, device=self.device)
-        tanHalfFov = torch.tan((fov / 2))
-        max_y = tanHalfFov * znear
-        min_y = -max_y
-        max_x = max_y * aspect_ratio
-        min_x = -max_x
+    if scaled_depth_input:
+        # the input is scaled depth, so we don't have to do anything
+        xy_sdepth = xy_depth
+    else:
+        # parse out important values from the projection matrix
+        K_matrix = self.get_projection_transform(**kwargs.copy()).get_matrix()
+        # parse out f1, f2 from K_matrix
+        unsqueeze_shape = [1] * xy_depth.dim()
+        unsqueeze_shape[0] = K_matrix.shape[0]
+        f1 = K_matrix[:, 2, 2].reshape(unsqueeze_shape)
+        f2 = K_matrix[:, 3, 2].reshape(unsqueeze_shape)
+        # get the scaled depth
+        sdepth = (f1 * xy_depth[..., 2:3] + f2) / xy_depth[..., 2:3]
+        # concatenate xy + scaled depth
+        xy_sdepth = torch.cat((xy_depth[..., 0:2], sdepth), dim=-1)
 
-        # NOTE: In OpenGL the projection matrix changes the handedness of the
-        # coordinate frame. i.e the NDC space positive z direction is the
-        # camera space negative z direction. This is because the sign of the z
-        # in the projection matrix is set to -1.0.
-        # In pytorch3d we maintain a right handed coordinate system throughout
-        # so the so the z sign is 1.0.
-        z_sign = 1.0
+    # unproject with inverse of the projection
+    unprojection_transform = to_ndc_transform.inverse()
+    return unprojection_transform.transform_points(xy_sdepth)
 
-        K[:, 0, 0] = 2.0 * znear / (max_x - min_x)
-        K[:, 1, 1] = 2.0 * znear / (max_y - min_y)
-        K[:, 0, 2] = (max_x + min_x) / (max_x - min_x)
-        K[:, 1, 2] = (max_y + min_y) / (max_y - min_y)
-        K[:, 3, 2] = z_sign * ones
+def is_perspective(self):
+    return True
 
-        # NOTE: This maps the z coordinate from [0, 1] where z = 0 if the point
-        # is at the near clipping plane and z = 1 when the point is at the far
-        # clipping plane.
-        K[:, 2, 2] = z_sign * zfar / (zfar - znear)
-        K[:, 2, 3] = -(zfar * znear) / (zfar - znear)
-
-        return K
-
-    def get_projection_transform(self, **kwargs) -> Transform3d:
-        """
-        Calculate the perspective projection matrix with a symmetric
-        viewing frustrum. Use column major order.
-        The viewing frustrum will be projected into ndc, s.t.
-        (max_x, max_y) -> (+1, +1)
-        (min_x, min_y) -> (-1, -1)
-
-        Args:
-            **kwargs: parameters for the projection can be passed in as keyword
-                arguments to override the default values set in `__init__`.
-
-        Return:
-            a Transform3d object which represents a batch of projection
-            matrices of shape (N, 4, 4)
-
-        .. code-block:: python
-
-            h1 = (max_y + min_y)/(max_y - min_y)
-            w1 = (max_x + min_x)/(max_x - min_x)
-            tanhalffov = tan((fov/2))
-            s1 = 1/tanhalffov
-            s2 = 1/(tanhalffov * (aspect_ratio))
-
-            # To map z to the range [0, 1] use:
-            f1 =  far / (far - near)
-            f2 = -(far * near) / (far - near)
-
-            # Projection matrix
-            K = [
-                    [s1,   0,   w1,   0],
-                    [0,   s2,   h1,   0],
-                    [0,    0,   f1,  f2],
-                    [0,    0,    1,   0],
-            ]
-        """
-        K = kwargs.get("K", self.K)
-        if K is not None:
-            if K.shape != (self._N, 4, 4):
-                msg = "Expected K to have shape of (%r, 4, 4)"
-                raise ValueError(msg % (self._N))
-        else:
-            K = self.compute_projection_matrix(
-                kwargs.get("znear", self.znear),
-                kwargs.get("zfar", self.zfar),
-                kwargs.get("fov", self.fov),
-                kwargs.get("aspect_ratio", self.aspect_ratio),
-                kwargs.get("degrees", self.degrees),
-            )
-
-        # Transpose the projection matrix as PyTorch3D transforms use row vectors.
-        transform = Transform3d(
-            matrix=K.transpose(1, 2).contiguous(), device=self.device
-        )
-        return transform
-
-    def unproject_points(
-        self,
-        xy_depth: torch.Tensor,
-        world_coordinates: bool = True,
-        scaled_depth_input: bool = False,
-        **kwargs,
-    ) -> torch.Tensor:
-        """>!
-        FoV cameras further allow for passing depth in world units
-        (`scaled_depth_input=False`) or in the [0, 1]-normalized units
-        (`scaled_depth_input=True`)
-
-        Args:
-            scaled_depth_input: If `True`, assumes the input depth is in
-                the [0, 1]-normalized units. If `False` the input depth is in
-                the world units.
-        """
-
-        # obtain the relevant transformation to ndc
-        if world_coordinates:
-            to_ndc_transform = self.get_full_projection_transform()
-        else:
-            to_ndc_transform = self.get_projection_transform()
-
-        if scaled_depth_input:
-            # the input is scaled depth, so we don't have to do anything
-            xy_sdepth = xy_depth
-        else:
-            # parse out important values from the projection matrix
-            K_matrix = self.get_projection_transform(**kwargs.copy()).get_matrix()
-            # parse out f1, f2 from K_matrix
-            unsqueeze_shape = [1] * xy_depth.dim()
-            unsqueeze_shape[0] = K_matrix.shape[0]
-            f1 = K_matrix[:, 2, 2].reshape(unsqueeze_shape)
-            f2 = K_matrix[:, 3, 2].reshape(unsqueeze_shape)
-            # get the scaled depth
-            sdepth = (f1 * xy_depth[..., 2:3] + f2) / xy_depth[..., 2:3]
-            # concatenate xy + scaled depth
-            xy_sdepth = torch.cat((xy_depth[..., 0:2], sdepth), dim=-1)
-
-        # unproject with inverse of the projection
-        unprojection_transform = to_ndc_transform.inverse()
-        return unprojection_transform.transform_points(xy_sdepth)
-
-    def is_perspective(self):
-        return True
-
-    def in_ndc(self):
-        return True
+def in_ndc(self):
+    return True
 
 #######################################################################################
 ##  ██████╗ ███████╗███████╗██╗███╗   ██╗██╗████████╗██╗ ██████╗ ███╗   ██╗███████╗  ##
